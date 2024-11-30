@@ -1,0 +1,21 @@
+{
+	"geode": "4.0.1",
+	"gd": {
+		"win": "2.2074",
+		"android": "2.2074",
+		"mac": "2.2074",
+		"ios": "2.2074"
+	},
+	"id": "zilko.menu_customizer",
+	"name": "Menu Customizer",
+	"version": "v1.0.0",
+	"developer": "Zilko",
+	"description": "",
+	"dependencies": [
+		{
+			"id": "geode.node-ids",
+			"version": ">=v1.17.0",
+			"importance": "required"
+		}
+	]
+}

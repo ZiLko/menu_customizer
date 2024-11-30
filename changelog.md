@@ -1,0 +1,14 @@
+if (xOffsetInput) xOffsetInput->setString(getString(props.offset.x).c_str());
+    if (yOffsetInput) yOffsetInput->setString(getString(props.offset.y).c_str());
+    if (xScaleInput) xScaleInput->setString(getString(props.scale.x).c_str());
+    if (yScaleInput) yScaleInput->setString(getString(props.scale.y).c_str());
+    if (xRotationInput) xRotationInput->setString(getString(props.rotation.x).c_str());
+    if (yRotationInput) yRotationInput->setString(getString(props.rotation.y).c_str());
+    if (zRotationInput) zRotationInput->setString(getString(props.rotation.z).c_str());
+    if (xSkewInput) xSkewInput->setString(getString(props.skew.x).c_str());
+    if (ySkewInput) ySkewInput->setString(getString(props.skew.y).c_str());
+    if (xAnchorInput) xAnchorInput->setString(getString(props.anchor.x).c_str());
+    if (yAnchorInput) yAnchorInput->setString(getString(props.anchor.y).c_str());
+    if (xSizeInput) xSizeInput->setString(getString(props.size.x).c_str());
+    if (ySizeInput) ySizeInput->setString(getString(props.size.y).c_str());
+    if (opacityInput) opacityInput->setString(getString(props.size.y).c_str());
