@@ -12,12 +12,14 @@ public:
     static std::unordered_map<std::string, NodeProperties>& getDefaults();
     static void setDefaultsFor(std::string, NodeProperties);
     static NodeProperties getDefaultsFor(std::string);
+    static bool hasSavedValue(std::string);
 
     static void applyLayer(CCNode*, std::vector<Node>);
     static void applyBasics(CCNode*, std::string, NodeProperties, bool);
     static void applyToButton(CCNode*, Node, NodeProperties);
     static void applyToSprite(CCNode*, Node, NodeProperties);
     static void applyToLabel(CCNode*, Node, NodeProperties);
+    static void applyToSprite9(CCNode*, Node, NodeProperties);
 
     static void saveProperties(std::string, NodeProperties);
     static NodeProperties getSavedProperties(std::string);

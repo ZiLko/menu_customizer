@@ -76,6 +76,8 @@ public:
 
     CCMenuItemToggler* visibleToggle = nullptr;
     CCMenuItemToggler* enableToggle = nullptr;
+    CCMenuItemToggler* flipXToggle = nullptr;
+    CCMenuItemToggler* flipYToggle = nullptr;
     CCMenuItemSpriteExtra* colorButton = nullptr;
 
     static SelectorLayer* create(CCNode*, std::vector<Node>);
@@ -110,10 +112,11 @@ public:
     void updateScale();
     void updateRotation();
 
+    void onCallback();
     void onToggle(CCObject*);
     void openColorPicker(CCObject*);
     void onRestoreAll(CCObject*);
     void onRestoreSelected(CCObject*);
     void onRandom(CCObject*);
-    void onCallback();
+    void onSettings(CCObject*);
 };

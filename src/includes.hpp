@@ -5,18 +5,22 @@ using namespace geode::prelude;
 enum NodeType {
     Button = 1,
     Sprite = 2,
-    Label = 3
+    Label = 3,
+    Sprite9 = 4
 };
 
 struct ColorSettings {
     bool recursive = false;
     std::vector<int> indexes = {};
+    bool ignoreParent = false;
 };
 
 struct NodeSprite {
     std::string name;
+    bool spriteFrameName = true;
     cocos2d::ccColor3B color = ccc3(255, 255, 255);
     int opacity = 255;
+    cocos2d::CCSize size = {0, 0};
 };
 
 struct Node {
@@ -62,10 +66,17 @@ const std::vector<Node> menuLayerNodes = {
     { "twitch-button", { "gj_twitchIcon_001.png" }, {"social-media-menu"} },
     { "more-games-button", { "GJ_moreGamesBtn_001.png" }, {"more-games-menu"} },
     { "close-button", { "GJ_closeBtn_001.png" }, {"close-menu"} },
-    { "main-title", { "GJ_logo_001.png" }, {}, NodeType::Sprite },
-    { "player-username", {}, {}, NodeType::Label }
+    { "main-title", { "GJ_logo_001.png" }, {}, NodeType::Sprite},
+    { "player-username", { "goldFont.fnt" }, {}, NodeType::Label }
 };
 
 const std::vector<Node> pauseLayerNodes = {
-    { "normal-progress-bar", { "" }, {}, NodeType::Sprite, {true, {0}} },
+    { "play-button", { "GJ_playBtn2_001.png" }, {"center-button-menu"} },
+    { "practice-button", { "GJ_practiceBtn_001.png" }, {"center-button-menu"} },
+    { "exit-button", { "GJ_menuBtn_001.png" }, {"center-button-menu"} },
+    { "retry-button", { "GJ_replayBtn_001.png" }, {"center-button-menu"} },
+    { "level-name", { "bigFont.fnt" }, {}, NodeType::Label },
+    { "background", { "square02b_001.png", false, ccc3(0, 0, 0), 75, {569, 320} }, {}, NodeType::Sprite9 },
+    { "normal-progress-bar", { "GJ_progressBar_001.png", false, ccc3(0, 255, 0) }, {}, NodeType::Sprite, {true, {0}, true} },
+    { "practice-progress-bar", { "GJ_progressBar_001.png", false, ccc3(0, 255, 255) }, {}, NodeType::Sprite, {true, {0}, true} },
 };

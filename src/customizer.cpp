@@ -61,8 +61,8 @@ NodeProperties Customizer::getSavedProperties(std::string id) {
 		json["visible"].asBool().unwrapOr(true),
 		json["enabled"].asBool().unwrapOr(true),
 		json["zOrder"].asInt().unwrapOrDefault(),
-		json["flipX"].asInt().unwrapOr(true),
-		json["flipY"].asInt().unwrapOr(true)
+		json["flipX"].asBool().unwrapOr(true),
+		json["flipY"].asBool().unwrapOr(true)
     };
 
 	return props;
@@ -73,6 +73,8 @@ NodeProperties Customizer::getNodeProperties(CCNode* node, Node info) {
 	
 	float opacity = 100.f;
 	bool disabled = false;
+	bool flipX = false;
+	bool flipY = false;
 	cocos2d::CCPoint scale = ccp(node->getScaleX(), node->getScaleY());
 	cocos2d::ccColor3B color;
 
@@ -91,6 +93,17 @@ NodeProperties Customizer::getNodeProperties(CCNode* node, Node info) {
 
 	if (CCSprite* spr = typeinfo_cast<CCSprite*>(node); info.type == NodeType::Sprite) {
 		opacity = spr->getOpacity() / 255.f * 100.f;
+		flipX = spr->isFlipX();
+		flipY = spr->isFlipY();
+
+		if (info.colors.recursive && info.colors.ignoreParent && !info.colors.indexes.empty())
+			spr = spr->getChildByType<CCSprite>(info.colors.indexes[0]);
+
+		color = spr->getColor();
+	}
+
+	if (CCScale9Sprite* spr = typeinfo_cast<CCScale9Sprite*>(node); info.type == NodeType::Sprite9) {
+		opacity = spr->getOpacity() / 255.f * 100.f;
 		color = spr->getColor();
 	}
 
@@ -106,8 +119,8 @@ NodeProperties Customizer::getNodeProperties(CCNode* node, Node info) {
 		node->isVisible(),
 		disabled,
 		node->getZOrder(),
-		node->isFlipX(),
-		node->isFlipY()
+		flipX,
+		flipY
 	};
 
 	return props;
@@ -186,6 +199,7 @@ void Customizer::setNodeProperties(CCNode* node, Node info, NodeProperties props
 		case NodeType::Button: applyToButton(node, info, props); break;
 		case NodeType::Sprite: applyToSprite(node, info, props); break;
 		case NodeType::Label: applyToLabel(node, info, props); break;
+		case NodeType::Sprite9: applyToSprite9(node, info, props); break;
 	}
 }
 
@@ -198,12 +212,18 @@ std::unordered_map<std::string, NodeProperties>& Customizer::getDefaults() {
 }
 
 NodeProperties Customizer::getDefaultsFor(std::string id) {
-	NodeProperties ret = {};
+	NodeProperties ret;
 	return getDefaults().contains(id) ? getDefaults().at(id) : ret;
 }
 
 cocos2d::CCPoint Customizer::getOriginalPos(std::string id) {
 	return getDefaultsFor(id).offset;
+}
+
+bool Customizer::hasSavedValue(std::string id) {
+	if (!Mod::get()->hasSavedValue(id)) return false;
+	matjson::Value empty;
+	return Mod::get()->getSavedValue<matjson::Value>(id) != empty;
 }
 
 void Customizer::applyLayer(CCNode* layer, std::vector<Node> nodes) {
@@ -213,7 +233,7 @@ void Customizer::applyLayer(CCNode* layer, std::vector<Node> nodes) {
 
 		setDefaultsFor(info.id, getNodeProperties(node, info));
 
-		if (!Mod::get()->hasSavedValue(info.id)) continue;
+		if (!hasSavedValue(info.id)) continue;
 		NodeProperties props = getSavedProperties(info.id);
 		// NodeProperties props = getRandomPropsChill();
 
@@ -247,6 +267,8 @@ void Customizer::applyToButton(CCNode* node, Node info, NodeProperties props) {
 	CCSprite* sprite = button->getChildByType<CCSprite>(0);
 	if (!sprite) return;
 
+	sprite->setFlipX(props.flipX);
+	sprite->setFlipY(props.flipY);
 	sprite->setScaleX(props.scale.x);
 	sprite->setScaleY(props.scale.y);
 	button->setContentSize({sprite->getContentSize().width * props.scale.x, sprite->getContentSize().height * props.scale.y});
@@ -265,8 +287,13 @@ void Customizer::applyToSprite(CCNode* node, Node info, NodeProperties props) {
 	if (!sprite) return;
 
 	applyBasics(node, info.id, props);
-	sprite->setColor(props.color);
+
 	sprite->setOpacity(static_cast<int>(props.opacity / 100.f * 255));
+	sprite->setFlipX(props.flipX);
+	sprite->setFlipY(props.flipY);
+
+	if (!info.colors.ignoreParent)
+		sprite->setColor(props.color);
 
 	if (!info.colors.recursive) return;
 
@@ -280,8 +307,32 @@ void Customizer::applyToLabel(CCNode* node, Node info, NodeProperties props) {
 	CCLabelBMFont* label = typeinfo_cast<CCLabelBMFont*>(node);
 	if (!label) return;
 
+	if (props.flipX) props.scale.x *= -1;
+	if (props.flipY) props.scale.y *= -1;
+
     applyBasics(node, info.id, props);
 	label->setColor(props.color);
 	label->setOpacity(static_cast<int>(props.opacity / 100.f * 255));
 }
 
+void Customizer::applyToSprite9(CCNode* node, Node info, NodeProperties props) {
+	CCScale9Sprite* sprite = typeinfo_cast<CCScale9Sprite*>(node);
+	if (!sprite) return;
+
+	applyBasics(node, info.id, props);
+
+	sprite->setOpacity(static_cast<int>(props.opacity / 100.f * 255));
+	if (props.flipX) props.scale.x *= -1;
+	if (props.flipY) props.scale.y *= -1;
+	sprite->setContentSize(props.size);
+
+	if (!info.colors.ignoreParent)
+		sprite->setColor(props.color);
+
+	if (!info.colors.recursive) return;
+
+	for (int index : info.colors.indexes) {
+		if (CCSprite* sprite2 = sprite->getChildByType<CCSprite>(index))
+	    	sprite2->setColor(props.color);
+	}
+}

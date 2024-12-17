@@ -1,5 +1,6 @@
 #include "selector_layer.hpp" 
 #include "customizer.hpp"
+#include <Geode/ui/GeodeUI.hpp>
 
 void Cell::onEdit(CCObject*) {
     static_cast<SelectorLayer*>(parent)->selectNode(node);
@@ -71,7 +72,7 @@ void SelectorLayer::selectNode(Node node) {
 
     selectedNode = node;
     selectedProps = Customizer::getSavedProperties(node.id);
-    if (!Mod::get()->hasSavedValue(node.id)) {
+    if (!Customizer::hasSavedValue(node.id)) {
         selectedProps = Customizer::getNodeProperties(Customizer::getNode(layer, node), node);
         selectedProps.offset = ccp(0, 0);
     }
@@ -224,7 +225,9 @@ NodeProperties SelectorLayer::getProperties() {
         colorSprite->getColor(),
         visibleToggle ? visibleToggle->isToggled() : true,
         enableToggle ? enableToggle->isToggled() : true,
-        static_cast<int>(getFloat(zOrderInput))
+        static_cast<int>(getFloat(zOrderInput)),
+        flipXToggle ? flipXToggle->isToggled() : false,
+        flipYToggle ? flipYToggle->isToggled() : false
     };
 }
 
@@ -248,6 +251,8 @@ void SelectorLayer::setProperties(NodeProperties props) {
     if (enableToggle) enableToggle->toggle(props.enabled);
     if (colorSprite) colorSprite->setColor(props.color);
     if (zOrderInput) zOrderInput->setString(std::to_string(props.zOrder).c_str());
+    if (flipXToggle) flipXToggle->toggle(props.flipX);
+    if (flipYToggle) flipYToggle->toggle(props.flipY);
 
     updateSliders();
 }
@@ -389,7 +394,9 @@ void SelectorLayer::onRestoreAll(CCObject*) {
                 NodeProperties props = Customizer::getDefaultsFor(info.id);
                 props.offset = ccp(0, 0);
                 Customizer::setNodeProperties(node, info, props);
-                Customizer::saveProperties(selectedNode.id, props);
+                Customizer::saveProperties(info.id, props);
+                matjson::Value empty;
+                Mod::get()->setSavedValue(info.id, empty);
             }
         }
     );
@@ -401,6 +408,10 @@ void SelectorLayer::onRestoreSelected(CCObject*) {
     props.offset = ccp(0, 0);
     setProperties(props);
     updateNode();
+    matjson::Value empty;
+    Mod::get()->setSavedValue(selectedNode.id, empty);
+    hideBackground(1.f);
+    this->runAction(CCSequence::create(CCDelayTime::create(0.8f), CCCallFunc::create(this, callfunc_selector(SelectorLayer::onCallback)), nullptr));
 }
 
 void SelectorLayer::onRandom(CCObject*) {
@@ -411,4 +422,8 @@ void SelectorLayer::onRandom(CCObject*) {
 
     hideBackground(1.f);
     this->runAction(CCSequence::create(CCDelayTime::create(0.8f), CCCallFunc::create(this, callfunc_selector(SelectorLayer::onCallback)), nullptr));
+}
+
+void SelectorLayer::onSettings(CCObject*) {
+	geode::openSettingsPopup(Mod::get(), false);
 }

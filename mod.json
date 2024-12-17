@@ -16,6 +16,19 @@
 			"id": "geode.node-ids",
 			"version": ">=v1.17.0",
 			"importance": "required"
+		},
+		{
+			"id": "geode.custom-keybinds",
+			"version": ">=v1.10.0",
+			"importance": "required",
+			"platforms": ["win"]
 		}
-	]
+	],
+	"settings": {
+		"disable": {
+			"name": "Disable All",
+			"type": "bool",
+			"default": false
+		}
+	}
 }

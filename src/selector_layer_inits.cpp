@@ -37,12 +37,29 @@ bool Cell::init(Node node) {
     lbl->setPosition({140, 43});
     lbl->limitLabelWidth(93.f, 0.9f, 0.01f);
     addChild(lbl);
+    CCSprite* spr = node.sprite.spriteFrameName ? CCSprite::createWithSpriteFrameName(node.sprite.name.c_str()) : CCSprite::create(node.sprite.name.c_str());
 
-    if (CCSprite* spr = CCSprite::createWithSpriteFrameName(node.sprite.name.c_str())) {
+    if (node.type == NodeType::Sprite9) {
+        spr = nullptr;
+        if (CCScale9Sprite* spr9 = CCScale9Sprite::create(node.sprite.name.c_str())) {
+            cocos2d::CCSize size = node.sprite.size;
+            float longer = size.width > size.height ? size.width : size.height;
+            spr9->setPosition({49, 32.5f});
+            spr9->setContentSize(size);
+            spr9->setScale(50.f / longer);
+            spr9->setColor(node.sprite.color);
+            spr9->setOpacity(node.sprite.opacity);
+            addChild(spr9);
+        }
+    }
+
+    if (spr) {
         spr->setPosition({49, 32.5f});
         cocos2d::CCSize size = spr->getContentSize();
         float longer = size.width > size.height ? size.width : size.height;
         spr->setScale(50.f / longer);
+        spr->setColor(node.sprite.color);
+        spr->setOpacity(node.sprite.opacity);
         addChild(spr);
     } else {
         if (node.id == "geode.loader/geode-button") {
@@ -60,7 +77,7 @@ bool Cell::init(Node node) {
             addChild(spr);
         }
         else if (CCLabelBMFont* realLbl = typeinfo_cast<CCLabelBMFont*>(Customizer::getNode(layer, node)); node.type == NodeType::Label) {
-            CCLabelBMFont* lbl = CCLabelBMFont::create(realLbl->getString(), "goldFont.fnt");
+            CCLabelBMFont* lbl = CCLabelBMFont::create(realLbl->getString(), node.sprite.name.c_str());
             lbl->setPosition({49, 32.5f});
             cocos2d::CCSize size = lbl->getContentSize();
             float longer = size.width > size.height ? size.width : size.height;
@@ -99,15 +116,21 @@ bool SelectorLayer::setup(CCNode* layer, std::vector<Node> selectedNodes) {
 
     updateListColors();
 
-    ButtonSprite* spr = ButtonSprite::create("Restore All");
-    spr->setScale(0.412f);
-    restoreButton = CCMenuItemSpriteExtra::create(spr, this, menu_selector(SelectorLayer::onRestoreAll));
+    ButtonSprite* btnSpr = ButtonSprite::create("Restore All");
+    btnSpr->setScale(0.412f);
+    restoreButton = CCMenuItemSpriteExtra::create(btnSpr, this, menu_selector(SelectorLayer::onRestoreAll));
     restoreButton->setPosition({412, 244});
     if (ButtonSprite* btnSpr = restoreButton->getChildByType<ButtonSprite>(0)) {
         btnSpr->getChildByType<CCScale9Sprite>(0)->setOpacity(120);
         btnSpr->getChildByType<CCLabelBMFont>(0)->setOpacity(120);
     }
     m_buttonMenu->addChild(restoreButton);
+
+    CCSprite* spr = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
+    spr->setScale(0.575f);
+    CCMenuItemSpriteExtra* btn = CCMenuItemSpriteExtra::create(spr, this, menu_selector(SelectorLayer::onSettings));
+    btn->setPosition(m_closeBtn->getPosition() + ccp(37, 0));
+    m_buttonMenu->addChild(btn);
 
 	listLayer = GJCommentListLayer::create(listView, "", ccc4(255, 255, 255, 0), 200, 200, true);
 	listLayer->setID("list-layer");
@@ -544,9 +567,7 @@ void SelectorLayer::addScrollLayer() {
     yAnchorInput->setScale(0.625f);
     scroll->m_contentLayer->addChild(yAnchorInput);
 
-    bool size = false;
-
-    if (size) {
+    if (selectedNode.type == NodeType::Sprite9) {
         yPos -= 21;
 
         lbl = CCLabelBMFont::create("Content Size:", "goldFont.fnt");
@@ -664,6 +685,50 @@ void SelectorLayer::addScrollLayer() {
         scroll->m_contentLayer->addChild(menu);
         menu->addChild(enableToggle);
     }
+
+    yPos -= 27;
+
+    lbl = CCLabelBMFont::create("Flip X", "bigFont.fnt");
+    lbl->setPosition({8, yPos});
+    lbl->setAnchorPoint({0, 0.5f});
+    lbl->setScale(0.375f);
+    scroll->m_contentLayer->addChild(lbl);
+
+    flipXToggle = CCMenuItemToggler::create(
+        CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png"),
+        CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png"),
+        this,
+        menu_selector(SelectorLayer::onToggle)
+    );
+    flipXToggle->setScale(0.5f);
+
+    menu = CCMenu::create();
+    menu->setAnchorPoint({0, 0});
+    menu->setPosition({102, yPos});
+    scroll->m_contentLayer->addChild(menu);
+    menu->addChild(flipXToggle);
+
+    yPos -= 27;
+
+    lbl = CCLabelBMFont::create("Flip Y", "bigFont.fnt");
+    lbl->setPosition({8, yPos});
+    lbl->setAnchorPoint({0, 0.5f});
+    lbl->setScale(0.375f);
+    scroll->m_contentLayer->addChild(lbl);
+
+    flipYToggle = CCMenuItemToggler::create(
+        CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png"),
+        CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png"),
+        this,
+        menu_selector(SelectorLayer::onToggle)
+    );
+    flipYToggle->setScale(0.5f);
+
+    menu = CCMenu::create();
+    menu->setAnchorPoint({0, 0});
+    menu->setPosition({102, yPos});
+    scroll->m_contentLayer->addChild(menu);
+    menu->addChild(flipYToggle);
 
     yPos -= 27;
 
