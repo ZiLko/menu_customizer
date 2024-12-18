@@ -20,6 +20,7 @@ public:
     static void applyToSprite(CCNode*, Node, NodeProperties);
     static void applyToLabel(CCNode*, Node, NodeProperties);
     static void applyToSprite9(CCNode*, Node, NodeProperties);
+    static void applyToSlider(CCNode*, Node, NodeProperties);
 
     static void saveProperties(std::string, NodeProperties);
     static NodeProperties getSavedProperties(std::string);

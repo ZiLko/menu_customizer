@@ -258,7 +258,7 @@ void SelectorLayer::setProperties(NodeProperties props) {
 }
 
 void SelectorLayer::updateListColors() {
-    cocos2d::ccColor3B color = ccc3(72, 91, 181);
+    cocos2d::ccColor3B color = ccc3(101, 121, 220);
 	cocos2d::ccColor3B color1 = ccc3(std::max(0, color.r - 70), std::max(0, color.g - 70), std::max(0, color.b - 70));
 	cocos2d::ccColor3B color2 = ccc3(std::max(0, color.r - 55), std::max(0, color.g - 55), std::max(0, color.b - 55));
 

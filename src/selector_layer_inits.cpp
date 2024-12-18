@@ -17,8 +17,8 @@ SelectorLayer* SelectorLayer::create(CCNode* layer, std::vector<Node> nodes) {
 Cell* Cell::create(Node node, geode::Popup<CCNode*, std::vector<Node>>* parent, CCNode* layer) {
     Cell* ret = new Cell();
     ret->layer = layer;
+    ret->parent = parent;
     if (ret->init(node)) {
-        ret->parent = parent;
         ret->autorelease();
         return ret;
     }
@@ -39,6 +39,21 @@ bool Cell::init(Node node) {
     addChild(lbl);
     CCSprite* spr = node.sprite.spriteFrameName ? CCSprite::createWithSpriteFrameName(node.sprite.name.c_str()) : CCSprite::create(node.sprite.name.c_str());
 
+    if (node.sprite.grayScale) {
+        if (CCSpriteGrayscale* sprG = node.sprite.spriteFrameName ? CCSpriteGrayscale::createWithSpriteFrameName(node.sprite.name.c_str()) : CCSpriteGrayscale::create(node.sprite.name.c_str())) {
+            spr = nullptr;
+            sprG->setPosition({49, 32.5f});
+            cocos2d::CCSize size = sprG->getContentSize() * node.sprite.scale;
+            float longer = size.width > size.height ? size.width : size.height;
+            float scale = 50.f / longer;
+            sprG->setScaleX(scale * node.sprite.scale.x);
+            sprG->setScaleY(scale * node.sprite.scale.y);
+            sprG->setColor(node.sprite.color);
+            sprG->setOpacity(node.sprite.opacity);
+            addChild(sprG);
+        }
+    }
+
     if (node.type == NodeType::Sprite9) {
         spr = nullptr;
         if (CCScale9Sprite* spr9 = CCScale9Sprite::create(node.sprite.name.c_str())) {
@@ -55,9 +70,11 @@ bool Cell::init(Node node) {
 
     if (spr) {
         spr->setPosition({49, 32.5f});
-        cocos2d::CCSize size = spr->getContentSize();
+        cocos2d::CCSize size = spr->getContentSize() * node.sprite.scale;
         float longer = size.width > size.height ? size.width : size.height;
-        spr->setScale(50.f / longer);
+        float scale = 50.f / longer;
+        spr->setScaleX(scale * node.sprite.scale.x);
+        spr->setScaleY(scale * node.sprite.scale.y);
         spr->setColor(node.sprite.color);
         spr->setOpacity(node.sprite.opacity);
         addChild(spr);

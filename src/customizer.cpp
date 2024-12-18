@@ -78,7 +78,7 @@ NodeProperties Customizer::getNodeProperties(CCNode* node, Node info) {
 	cocos2d::CCPoint scale = ccp(node->getScaleX(), node->getScaleY());
 	cocos2d::ccColor3B color;
 
-	if (CCMenuItemSpriteExtra* btn = typeinfo_cast<CCMenuItemSpriteExtra*>(node); info.type == NodeType::Button) {
+	if (CCMenuItemSpriteExtra* btn = typeinfo_cast<CCMenuItemSpriteExtra*>(node)) {
 		opacity = btn->getOpacity() / 255.f * 100.f;
 		color = btn->getColor();
 		disabled = btn->isEnabled();
@@ -86,12 +86,12 @@ NodeProperties Customizer::getNodeProperties(CCNode* node, Node info) {
 		scale = ccp(spr->getScaleX(), spr->getScaleY());
 	}
 
-	if (CCLabelBMFont* lbl = typeinfo_cast<CCLabelBMFont*>(node); info.type == NodeType::Label) {
+	else if (CCLabelBMFont* lbl = typeinfo_cast<CCLabelBMFont*>(node)) {
 		opacity = lbl->getOpacity() / 255.f * 100.f;
 		color = lbl->getColor();
 	}
 
-	if (CCSprite* spr = typeinfo_cast<CCSprite*>(node); info.type == NodeType::Sprite) {
+	else if (CCSprite* spr = typeinfo_cast<CCSprite*>(node)) {
 		opacity = spr->getOpacity() / 255.f * 100.f;
 		flipX = spr->isFlipX();
 		flipY = spr->isFlipY();
@@ -102,9 +102,16 @@ NodeProperties Customizer::getNodeProperties(CCNode* node, Node info) {
 		color = spr->getColor();
 	}
 
-	if (CCScale9Sprite* spr = typeinfo_cast<CCScale9Sprite*>(node); info.type == NodeType::Sprite9) {
+	else if (CCScale9Sprite* spr = typeinfo_cast<CCScale9Sprite*>(node)) {
 		opacity = spr->getOpacity() / 255.f * 100.f;
 		color = spr->getColor();
+	}
+
+	else if (Slider* slider = typeinfo_cast<Slider*>(node)) {
+		if (CCSprite* spr = slider->getChildByType<CCSprite>(0)) {
+			opacity = spr->getOpacity() / 255.f * 100.f;
+			color = spr->getColor();
+		}
 	}
 
 	NodeProperties props = {
@@ -200,6 +207,7 @@ void Customizer::setNodeProperties(CCNode* node, Node info, NodeProperties props
 		case NodeType::Sprite: applyToSprite(node, info, props); break;
 		case NodeType::Label: applyToLabel(node, info, props); break;
 		case NodeType::Sprite9: applyToSprite9(node, info, props); break;
+		case NodeType::Sliderr: applyToSlider(node, info, props); break;
 	}
 }
 
@@ -260,25 +268,37 @@ void Customizer::applyToButton(CCNode* node, Node info, NodeProperties props) {
 	if (!button) return;
 
 	applyBasics(node, info.id, props, false);
-	button->setColor(props.color);
-	button->setOpacity(static_cast<int>(props.opacity / 100.f * 255));
 	button->setEnabled(props.enabled);
 
-	CCSprite* sprite = button->getChildByType<CCSprite>(0);
-	if (!sprite) return;
+	std::vector<CCSprite*> sprites;
+	sprites.push_back(button->getChildByType<CCSprite>(0)); 
+	if (CCSprite* sprite = sprites[0]) {
+		sprite->setScaleX(props.scale.x);
+		sprite->setScaleY(props.scale.y);
+		button->setContentSize({sprite->getContentSize().width * props.scale.x, sprite->getContentSize().height * props.scale.y});
+		sprite->setPosition(button->getContentSize() / 2);
 
-	sprite->setFlipX(props.flipX);
-	sprite->setFlipY(props.flipY);
-	sprite->setScaleX(props.scale.x);
-	sprite->setScaleY(props.scale.y);
-	button->setContentSize({sprite->getContentSize().width * props.scale.x, sprite->getContentSize().height * props.scale.y});
-	sprite->setPosition(button->getContentSize() / 2);
-	
-	if (!info.colors.recursive) return;
+		sprites.push_back(sprite->getChildByType<CCSprite>(0));
+		if (CCLabelBMFont* lbl = sprite->getChildByType<CCLabelBMFont>(0)) {
+			for (CCNode* node : CCArrayExt<CCNode*>(lbl->getChildren())) {
+				sprites.push_back(typeinfo_cast<CCSprite*>(node));
+			}
+		}
+	}
 
-	for (int index : info.colors.indexes) {
-		if (CCSprite* sprite2 = sprite->getChildByType<CCSprite>(index))
-	    	sprite2->setColor(props.color);
+	for (CCSprite* sprite : sprites) {
+		if (!sprite) continue;
+		sprite->setColor(props.color);
+		sprite->setOpacity(static_cast<int>(props.opacity / 100.f * 255));
+		sprite->setFlipX(props.flipX);
+		sprite->setFlipY(props.flipY);
+		
+		if (!info.colors.recursive) continue;
+
+		for (int index : info.colors.indexes) {
+			if (CCSprite* sprite2 = sprite->getChildByType<CCSprite>(index))
+				sprite2->setColor(props.color);
+		}
 	}
 }
 
@@ -319,11 +339,11 @@ void Customizer::applyToSprite9(CCNode* node, Node info, NodeProperties props) {
 	CCScale9Sprite* sprite = typeinfo_cast<CCScale9Sprite*>(node);
 	if (!sprite) return;
 
+	if (props.flipX) props.scale.x *= -1;
+	if (props.flipY) props.scale.y *= -1;
 	applyBasics(node, info.id, props);
 
 	sprite->setOpacity(static_cast<int>(props.opacity / 100.f * 255));
-	if (props.flipX) props.scale.x *= -1;
-	if (props.flipY) props.scale.y *= -1;
 	sprite->setContentSize(props.size);
 
 	if (!info.colors.ignoreParent)
@@ -334,5 +354,35 @@ void Customizer::applyToSprite9(CCNode* node, Node info, NodeProperties props) {
 	for (int index : info.colors.indexes) {
 		if (CCSprite* sprite2 = sprite->getChildByType<CCSprite>(index))
 	    	sprite2->setColor(props.color);
+	}
+}
+
+void Customizer::applyToSlider(CCNode* node, Node info, NodeProperties props) {
+	Slider* slider = typeinfo_cast<Slider*>(node);
+	if (!slider) return;
+
+	if (props.flipX) props.scale.x *= -1;
+	if (props.flipY) props.scale.y *= -1;
+	applyBasics(node, info.id, props);
+
+	CCSprite* sprites[4] = {
+		slider->getChildByType<CCSprite>(0),
+		nullptr,
+		nullptr,
+		nullptr
+	};
+	if (SliderTouchLogic* logic = slider->getChildByType<SliderTouchLogic>(0)) {
+		if (SliderThumb* thumb = logic->getChildByType<SliderThumb>(0)) {
+			sprites[2] = thumb->getChildByType<CCSprite>(0);
+			sprites[3] = thumb->getChildByType<CCSprite>(1);
+		}
+	}
+	if (sprites[0])
+		sprites[1] = sprites[0]->getChildByType<CCSprite>(0);
+
+	for (int i = 0; i < 4; i++) {
+		if (!sprites[i]) continue;
+		sprites[i]->setColor(props.color);
+		sprites[i]->setOpacity(static_cast<int>(props.opacity / 100.f * 255));
 	}
 }

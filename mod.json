@@ -11,6 +11,13 @@
 	"version": "v1.0.0",
 	"developer": "Zilko",
 	"description": "",
+	"settings": {
+		"disable": {
+			"name": "Disable All",
+			"type": "bool",
+			"default": false
+		}
+	},
 	"dependencies": [
 		{
 			"id": "geode.node-ids",
@@ -24,11 +31,9 @@
 			"platforms": ["win"]
 		}
 	],
-	"settings": {
-		"disable": {
-			"name": "Disable All",
-			"type": "bool",
-			"default": false
-		}
+	"resources": {
+		"sprites": [
+            "resources/slider.png"
+        ]
 	}
 }
